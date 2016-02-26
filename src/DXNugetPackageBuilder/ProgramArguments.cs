@@ -27,7 +27,7 @@ namespace DXNugetPackageBuilder
         public bool NugetPush { get; set; }
 
         [Description("The target nuget source location")]
-        [CommandLineArgument(Position = 4)]
+        [CommandLineArgument(Position = 4, IsRequired = false)]
         public string NugetSource { get; set; }
 
         [CommandLineArgument(IsRequired = false, DefaultValue = false)]

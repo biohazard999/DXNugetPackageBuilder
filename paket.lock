@@ -4,3 +4,4 @@ NUGET
     Microsoft.Web.Xdt (2.1.1)
     NuGet.Core (2.10.1)
       Microsoft.Web.Xdt (>= 2.1.0)
+    Ookii.CommandLine (2.2)

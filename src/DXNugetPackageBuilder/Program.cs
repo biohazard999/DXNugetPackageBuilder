@@ -33,7 +33,13 @@ namespace DXNugetPackageBuilder
                     if (arguments.Verbose)
                         Console.WriteLine("\t" + dependency);
                 },
-                    ex => Console.WriteLine(ex.ToString()),
+                    ex =>
+                    {
+                        var oldColor = Console.ForegroundColor;
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(ex.ToString());
+                        Console.ForegroundColor = oldColor;
+                    },
                     waringns.Add,
                     ex =>
                     {
@@ -84,6 +90,22 @@ namespace DXNugetPackageBuilder
 
         private static void BuildPackages(ProgramArguments arguments, Action<string> logAction, Action<Exception> logExceptionAction, Action<Tuple<string, Exception>> logLoadAssemblyAction, Action<Exception> unexpectedExceptionAction, Action<string> successAction)
         {
+            if (!Directory.Exists(arguments.SourceDirectory))
+            {
+                logExceptionAction(new DirectoryNotFoundException($"{arguments.SourceDirectory} does not exists"));
+                return;
+            }
+
+            if (!Directory.Exists(arguments.OutputDirectory))
+            {
+                Directory.CreateDirectory(arguments.OutputDirectory);
+            }
+
+            if (!Directory.Exists(arguments.PdbDirectory))
+            {
+                Directory.CreateDirectory(arguments.PdbDirectory);
+            }
+
             foreach (var file in Directory.EnumerateFiles(arguments.SourceDirectory, "*.dll").Concat(Directory.EnumerateFiles(arguments.SourceDirectory, "*.exe")).Where(f => Path.GetFileNameWithoutExtension(f).StartsWith("DevExpress")))
             {
                 try

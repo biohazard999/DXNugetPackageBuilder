@@ -105,4 +105,11 @@
       </ItemGroup>
     </When>
   </Choose>
+  <ItemGroup>
+    <Reference Include="Ookii.CommandLine">
+      <HintPath>..\..\packages\Ookii.CommandLine\lib\Ookii.CommandLine.dll</HintPath>
+      <Private>True</Private>
+      <Paket>True</Paket>
+    </Reference>
+  </ItemGroup>
 </Project>
