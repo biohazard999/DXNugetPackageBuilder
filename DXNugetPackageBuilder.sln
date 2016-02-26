@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{FB6FBA
 	ProjectSection(SolutionItems) = preProject
 		.paket\paket.bootstrapper.exe = .paket\paket.bootstrapper.exe
 		paket.dependencies = paket.dependencies
+		paket.lock = paket.lock
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".cake", ".cake", "{D30743B4-1DBC-4049-814A-4597546D7DF6}"
@@ -22,8 +23,31 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".git", ".git", "{8D8D9A31-3
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A1CCACDA-7EEF-410F-AAC5-C42189BAD40E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXNugetPackageBuilder", "src\DXNugetPackageBuilder\DXNugetPackageBuilder.csproj", "{5B7C83A1-179C-4805-9727-69E6C7024EF0}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B7C83A1-179C-4805-9727-69E6C7024EF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B7C83A1-179C-4805-9727-69E6C7024EF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B7C83A1-179C-4805-9727-69E6C7024EF0}.Debug|x86.ActiveCfg = Debug|x86
+		{5B7C83A1-179C-4805-9727-69E6C7024EF0}.Debug|x86.Build.0 = Debug|x86
+		{5B7C83A1-179C-4805-9727-69E6C7024EF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B7C83A1-179C-4805-9727-69E6C7024EF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B7C83A1-179C-4805-9727-69E6C7024EF0}.Release|x86.ActiveCfg = Release|x86
+		{5B7C83A1-179C-4805-9727-69E6C7024EF0}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5B7C83A1-179C-4805-9727-69E6C7024EF0} = {A1CCACDA-7EEF-410F-AAC5-C42189BAD40E}
 	EndGlobalSection
 EndGlobal

@@ -19,6 +19,16 @@ Task("Paket-Restore")
    });   	
 });
 
+Task("Paket-Install")
+	.IsDependentOn("Paket-Bootstrapper")
+	.Does(() =>
+{
+	StartProcess(".paket/paket.exe", new ProcessSettings{
+      WorkingDirectory = ".",
+      Arguments = "install"
+   });   	
+});
+
 Task("Default")
   .Does(() =>
 {

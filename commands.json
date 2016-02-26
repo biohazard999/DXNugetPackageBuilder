@@ -15,5 +15,10 @@
       "workingDirectory": ".",
       "arguments": "-ExecutionPolicy Bypass -File build.ps1 -Target Paket-Restore"
     },
+    "paket-install": {
+      "fileName": "powershell.exe",
+      "workingDirectory": ".",
+      "arguments": "-ExecutionPolicy Bypass -File build.ps1 -Target Paket-Install"
+    }
   }
 }
