@@ -47,8 +47,11 @@ Run it!
 
 The default settings will output your fresh nuget packages to `C:\tmp\Nuget`
 
-> To publish your packages to a sepearte nuget server make sure you have nuget.exe (2.8) on your path enviroment variable.
-Adjust
+Enjoy!
+
+### To publish automatically
+
+Adjust:
  
 ```cmd
 REM set NugetServer=
@@ -58,7 +61,9 @@ set NugetApiKey=-NugetApiKey Your-Api-Key-Goes-Here
 REM set NugetPush=
 set NugetPush=-NugetPush
 ```
-Enjoy!
+
+> To publish your packages to a sepearte nuget server make sure you have nuget.exe (2.8) on your path enviroment variable.
+
 
 ## Contribution
 Pull Request and other contributions are welcome!
