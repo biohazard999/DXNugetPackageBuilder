@@ -68,4 +68,4 @@ Feel free to file an [issue](//github.com/biohazard999/DXNugetPackageBuilder/iss
 
 ## More Info
 
-[Blog](//blog.delegate.at)
+[Blog](http//blog.delegate.at)
