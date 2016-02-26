@@ -1,0 +1,24 @@
+{
+  "commands": {
+    "build": {
+      "fileName": "powershell.exe",
+      "workingDirectory": ".",
+      "arguments": "-ExecutionPolicy Bypass -File build.ps1"
+    },
+    "paket-bootstrapper": {
+      "fileName": "powershell.exe",
+      "workingDirectory": ".",
+      "arguments": "-ExecutionPolicy Bypass -File build.ps1 -Target Paket-Bootstrapper"
+    },
+    "paket-restore": {
+      "fileName": "powershell.exe",
+      "workingDirectory": ".",
+      "arguments": "-ExecutionPolicy Bypass -File build.ps1 -Target Paket-Restore"
+    },
+    "paket-install": {
+      "fileName": "powershell.exe",
+      "workingDirectory": ".",
+      "arguments": "-ExecutionPolicy Bypass -File build.ps1 -Target Paket-Install"
+    }
+  }
+}
