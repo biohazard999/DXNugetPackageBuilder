@@ -29,10 +29,23 @@ Task("Paket-Install")
    });   	
 });
 
-Task("Default")
-  .Does(() =>
+
+Task("Clean")
+	.Does(() =>
 {
-  Information("Hello World!");
+	CleanDirectories("./src/**/bin/debug");
 });
+
+
+Task("Build")
+	.IsDependentOn("Clean")
+	.IsDependentOn("Paket-Install")	
+	.Does(() =>
+{
+	DotNetBuild("./DXNugetPackageBuilder.sln");
+});
+
+
+Task("Default").IsDependentOn("Build");
 
 RunTarget(target);
