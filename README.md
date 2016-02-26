@@ -1,6 +1,8 @@
 # DXNugetPackageBuilder
 A nuget package builder for the [DevExpress](//www.devexpress.com) Universal Suite
 
+![Build](https://mgrundner.visualstudio.com/DefaultCollection/_apis/public/build/definitions/289e8c64-e092-4fea-b963-56339082e2f2/38/badge)
+
 ## Preparation
 
 From your [Download-Manager](https://www.devexpress.com/ClientCenter/DownloadManager/)
