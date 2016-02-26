@@ -1,10 +1,11 @@
 set DXVersion=15.2
-set NugetApiKey=-NugetApiKey 4191b932-d111-4add-a259-69b875d00b6f
 set SymbolsFolder=c:\tmp\symbols
 set TargetNugetFolder=C:\tmp\Nuget
 set Localization=de;es;ja;ru
 set NugetServer=
-REM set NugetServer=-NugetSource http://paratfs:8081/
+REM set NugetServer=-NugetSource http://yourNugetServer/
+set NugetApiKey=
+REM set NugetApiKey=-NugetApiKey Your-Api-Key-Goes-Here
 set NugetPush=
 REM set NugetPush=-NugetPush
 
