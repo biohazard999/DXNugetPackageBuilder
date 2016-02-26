@@ -1,6 +1,8 @@
 # DXNugetPackageBuilder
 A nuget package builder for the [DevExpress](//www.devexpress.com) Universal Suite
 
+![Build](https://mgrundner.visualstudio.com/DefaultCollection/_apis/public/build/definitions/289e8c64-e092-4fea-b963-56339082e2f2/38/badge)
+
 ## Preparation
 
 From your [Download-Manager](https://www.devexpress.com/ClientCenter/DownloadManager/)
@@ -47,8 +49,11 @@ Run it!
 
 The default settings will output your fresh nuget packages to `C:\tmp\Nuget`
 
-> To publish your packages to a sepearte nuget server make sure you have nuget.exe (2.8) on your path enviroment variable.
-Adjust
+Enjoy!
+
+### To publish automatically
+
+Adjust:
  
 ```cmd
 REM set NugetServer=
@@ -58,7 +63,9 @@ set NugetApiKey=-NugetApiKey Your-Api-Key-Goes-Here
 REM set NugetPush=
 set NugetPush=-NugetPush
 ```
-Enjoy!
+
+> To publish your packages to a sepearte nuget server make sure you have nuget.exe (2.8) on your path enviroment variable.
+
 
 ## Contribution
 Pull Request and other contributions are welcome!
