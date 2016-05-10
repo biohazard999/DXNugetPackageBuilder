@@ -36,16 +36,23 @@ Task("Clean")
 	CleanDirectories("./src/**/bin/debug");
 });
 
+Task("Copy-NuGet")
+	.Does(() => 
+{
+	CopyFileToDirectory("./tools/nuget.exe", "./src/DXNugetPackageBuilder/bin/Debug/");
+});
 
 Task("Build")
 	.IsDependentOn("Clean")
-	.IsDependentOn("Paket-Install")	
+	.IsDependentOn("Paket-Restore")
+	.IsDependentOn("Copy-NuGet")
 	.Does(() =>
 {
 	DotNetBuild("./DXNugetPackageBuilder.sln");
 });
 
 
-Task("Default").IsDependentOn("Build");
+Task("Default")
+	.IsDependentOn("Build");
 
 RunTarget(target);
