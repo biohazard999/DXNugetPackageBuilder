@@ -33,6 +33,10 @@ namespace DXNugetPackageBuilder
         [CommandLineArgument(IsRequired = false, DefaultValue = false)]
         public bool UseAssemblyFileVersion { get; set; }
 
+
+        [CommandLineArgument(IsRequired = false, DefaultValue = false)]
+        public bool Strict { get; set; }
+
         public string[] LanguagesAsArray
         {
             get

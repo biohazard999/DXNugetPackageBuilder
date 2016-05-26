@@ -130,7 +130,7 @@ namespace DXNugetPackageBuilder
                     {
 
                         var assembly = Assembly.LoadFile(file);
-                     
+
                         var pdbFile = Path.ChangeExtension(Path.GetFileName(file), "pdb");
 
                         pdbFile = Path.Combine(arguments.PdbDirectory, pdbFile);
@@ -202,14 +202,64 @@ namespace DXNugetPackageBuilder
 
 
                             var refAssemblyVersion = refAssembly.Version;
-                            
+
                             var minVersion = new SemanticVersion(new Version(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build));
                             var maxVersion = new SemanticVersion(new Version(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build + 1));
 
                             var versionSpec = new VersionSpec { MinVersion = minVersion, MaxVersion = maxVersion, IsMinInclusive = true };
 
                             var dependency = new PackageDependency(refPackageId, versionSpec);
+
+                            if (!arguments.Strict)
+                            {
+                                var skippedDependencies = new Dictionary<string, string[]>();
+
+                                skippedDependencies["DevExpress.Persistent.Base"] = new[]
+                                {
+                                    "DevExpress.Utils",
+                                    "DevExpress.XtraReports",
+                                    "DevExpress.XtraReports.Extensions",
+                                    "DevExpress.Printing.Core",
+                                };
+
+                                skippedDependencies["DevExpress.Persistent.BaseImpl"] = new[]
+                                {
+                                    "DevExpress.Utils",
+                                    "DevExpress.ExpressApp.ReportsV2",
+                                    "DevExpress.ExpressApp.Reports",
+                                    "DevExpress.XtraReports",
+                                    "DevExpress.ExpressApp.ConditionalAppearance",
+                                    "DevExpress.XtraScheduler.Core",
+                                };
+
+                                skippedDependencies["DevExpress.Persistent.BaseImpl.EF"] = new[]
+                                {
+                                    "DevExpress.Utils",
+                                    "DevExpress.ExpressApp.Kpi",
+                                    "DevExpress.ExpressApp.ReportsV2",
+                                    "DevExpress.ExpressApp.Security",
+                                    "DevExpress.ExpressApp.ConditionalAppearance",
+                                    "DevExpress.ExpressApp.StateMachine",
+                                    "DevExpress.ExpressApp.Chart",
+                                    "DevExpress.XtraReports",
+                                    "DevExpress.XtraScheduler.Core",
+                                    "DevExpress.ExpressApp.Reports"
+                                };
+
+                                if (skippedDependencies.Keys.Any(id => package.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase)))
+                                {
+                                    var skippedDependency = skippedDependencies[package.Id];
+
+                                    if (skippedDependency.Any(id => dependency.Id.Equals(id)))
+                                    {
+                                        logAction($"Skipping Dependency: {dependency.Id} for Package {package.Id} to avoid UI in Persistence");
+                                        continue;
+                                    }
+                                }
+                            }
+
                             dependencies.Add(dependency);
+
                         }
 
                         package.DependencySets.Add(new PackageDependencySet(null, dependencies));
