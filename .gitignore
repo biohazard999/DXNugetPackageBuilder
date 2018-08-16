@@ -5,6 +5,7 @@
 
 .paket/paket.exe
 .paket/Paket.Restore.targets
+paket-files/paket.restore.cached
 tools/
 
 # User-specific files
