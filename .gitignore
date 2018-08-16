@@ -3,7 +3,8 @@
 
 ## Tools & Build Section
 
-.paket/
+.paket/paket.exe
+.paket/Paket.Restore.targets
 tools/
 
 # User-specific files
