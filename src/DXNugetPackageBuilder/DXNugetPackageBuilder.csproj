@@ -66,8 +66,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NugetAssemblyAnalyzer.cs" />
-    <Compile Include="NugetSpec.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProgramArguments.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
