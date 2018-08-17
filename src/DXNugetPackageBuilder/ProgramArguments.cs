@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Ookii.CommandLine;
 
 namespace DXNugetPackageBuilder
@@ -35,15 +36,14 @@ namespace DXNugetPackageBuilder
         [CommandLineArgument(IsRequired = false, DefaultValue = false)]
         public bool Strict { get; set; }
 
-        public IEnumerable<string> LanguagesAsArray
+        public IEnumerable<string> LanguagesEnumerable
         {
             get
             {
-                if(string.IsNullOrEmpty(Languages))
+                if (string.IsNullOrEmpty(Languages))
                 {
-                    return new string[] { };
+                    return Enumerable.Empty<string>();
                 }
-
                 return Languages.Split(';');
             }
         }
@@ -66,15 +66,15 @@ namespace DXNugetPackageBuilder
             {
                 // The Parse function returns null only when the ArgumentParsed event handler cancelled parsing.
                 var result = (ProgramArguments)parser.Parse(args);
-                if(result != null)
+                if (result != null)
                 {
                     return result;
                 }
             }
-            catch(CommandLineArgumentException ex)
+            catch (CommandLineArgumentException ex)
             {
                 // We use the LineWrappingTextWriter to neatly wrap console output.
-                using(var writer = LineWrappingTextWriter.ForConsoleError())
+                using (var writer = LineWrappingTextWriter.ForConsoleError())
                 {
                     // Tell the user what went wrong.
                     writer.WriteLine(ex.Message);

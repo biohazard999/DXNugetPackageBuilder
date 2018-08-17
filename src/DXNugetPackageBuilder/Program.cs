@@ -426,7 +426,7 @@ namespace DXNugetPackageBuilder
         {
             var resourceFileName = Path.GetFileName(Path.ChangeExtension(file, "resources.dll"));
 
-            foreach (var lang in arguments.LanguagesAsArray)
+            foreach (var lang in arguments.LanguagesEnumerable)
             {
                 var localizedAssemblyPath = Path.Combine(arguments.SourceDirectory, lang, resourceFileName);
                 if (File.Exists(localizedAssemblyPath))
