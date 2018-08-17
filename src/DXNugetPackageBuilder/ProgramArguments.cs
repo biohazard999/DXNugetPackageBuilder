@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Ookii.CommandLine;
-using System;
 
 namespace DXNugetPackageBuilder
 {
@@ -41,8 +40,10 @@ namespace DXNugetPackageBuilder
         {
             get
             {
-                if(String.IsNullOrEmpty(Languages))
+                if(string.IsNullOrEmpty(Languages))
+                {
                     return new string[] { };
+                }
 
                 return Languages.Split(';');
             }
@@ -67,7 +68,9 @@ namespace DXNugetPackageBuilder
                 // The Parse function returns null only when the ArgumentParsed event handler cancelled parsing.
                 var result = (ProgramArguments)parser.Parse(args);
                 if(result != null)
+                {
                     return result;
+                }
             }
             catch(CommandLineArgumentException ex)
             {
@@ -95,7 +98,9 @@ namespace DXNugetPackageBuilder
             // Try it: just call the sample with "CommandLineSampleCS.exe foo bar -Help", which will print usage even though both the Source and Destination
             // arguments are supplied.
             if(e.Argument.ArgumentName == "Help") // The name is always Help even if the alias was used to specify the argument
+            {
                 e.Cancel = true;
+            }
         }
     }
 }
