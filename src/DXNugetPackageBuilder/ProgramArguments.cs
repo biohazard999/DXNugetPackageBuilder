@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using Ookii.CommandLine;
 
 namespace DXNugetPackageBuilder
@@ -6,7 +7,6 @@ namespace DXNugetPackageBuilder
     [Description("Builds Nuget Packages from DevExpress-Assemblies")]
     public class ProgramArguments
     {
-
         [CommandLineArgument(Position = 0, IsRequired = true), Description("The directory where the DevExpress Assemblies live")]
         public string SourceDirectory { get; set; }
 
@@ -32,11 +32,10 @@ namespace DXNugetPackageBuilder
         [CommandLineArgument(IsRequired = false, DefaultValue = false)]
         public bool UseAssemblyFileVersion { get; set; }
 
-
         [CommandLineArgument(IsRequired = false, DefaultValue = false)]
         public bool Strict { get; set; }
 
-        public string[] LanguagesAsArray
+        public IEnumerable<string> LanguagesAsArray
         {
             get
             {
@@ -85,19 +84,19 @@ namespace DXNugetPackageBuilder
 
             // If we got here, we should print usage information to the console.
             // By default, aliases and default values are not included in the usage descriptions; for this sample, I do want to include them.
-            var options = new WriteUsageOptions() { IncludeDefaultValueInDescription = true, IncludeAliasInDescription = true };
+            var options = new WriteUsageOptions { IncludeDefaultValueInDescription = true, IncludeAliasInDescription = true };
             // WriteUsageToConsole automatically uses a LineWrappingTextWriter to properly word-wrap the text.
             parser.WriteUsageToConsole(options);
             return null;
         }
 
-        private static void CommandLineParser_ArgumentParsed(object sender, ArgumentParsedEventArgs e)
+        static void CommandLineParser_ArgumentParsed(object sender, ArgumentParsedEventArgs e)
         {
             // When the -Help argument (or -? using its alias) is specified, parsing is immediately cancelled. That way, CommandLineParser.Parse will
             // return null, and the Create method will display usage even if the correct number of positional arguments was supplied.
             // Try it: just call the sample with "CommandLineSampleCS.exe foo bar -Help", which will print usage even though both the Source and Destination
             // arguments are supplied.
-            if(e.Argument.ArgumentName == "Help") // The name is always Help even if the alias was used to specify the argument
+            if (e.Argument.ArgumentName == "Help") // The name is always Help even if the alias was used to specify the argument
             {
                 e.Cancel = true;
             }

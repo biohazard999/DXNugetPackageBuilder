@@ -141,7 +141,6 @@ namespace DXNugetPackageBuilder
                         var assembly = Assembly.LoadFile(file); // Will load from GAC if components are installed from DevExpress Installer
                         logAction?.Invoke($"Assembly {assembly.Location} loaded !");
 
-
                         var pdbFile = Path.ChangeExtension(Path.GetFileName(file), "pdb");
 
                         pdbFile = Path.Combine(arguments.PdbDirectory, pdbFile);
@@ -254,7 +253,7 @@ namespace DXNugetPackageBuilder
                                 // .Net Standard version of Assembly.LoadFrom would work, by not accessing the GAC
                                 if(standardAssembly.Location.Contains("GAC_MSIL"))
                                 {
-                                    logExceptionAction(new FileLoadException("Trying to load a standard dll from the GAC. It won't work, the script shouldn't be run on computer where DevExpress Installer has been run! Copy the necessary components on a computer without DevExpress installed."));
+                                    logExceptionAction?.Invoke(new FileLoadException("Trying to load a standard dll from the GAC. It won't work, the script shouldn't be run on computer where DevExpress Installer has been run! Copy the necessary components on a computer without DevExpress installed."));
                                 }
 
                                 logAction?.Invoke("netstandard20 dependencies:");
