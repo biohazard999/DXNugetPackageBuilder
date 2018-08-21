@@ -1,4 +1,4 @@
-set DXVersion=15.1
+set DXVersion=18.1
 set SymbolsFolder=c:\tmp\symbols
 set TargetNugetFolder=C:\tmp\Nuget
 set Localization=de;es;ja;ru

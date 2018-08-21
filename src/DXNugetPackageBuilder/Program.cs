@@ -4,8 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Policy;
-using System.Text;
+using System.Runtime.Versioning;
 using NuGet;
 
 namespace DXNugetPackageBuilder
@@ -22,40 +21,38 @@ namespace DXNugetPackageBuilder
                 return;
             }
 
-            var waringns = new List<Tuple<string, Exception>>();
+            var warnings = new List<Tuple<string, Exception>>();
             var success = new List<string>();
 
             if (!arguments.NugetPushOnly)
             {
-
                 BuildPackages(arguments, dependency =>
                 {
                     if (arguments.Verbose)
+                    {
                         Console.WriteLine("\t" + dependency);
+                    }
                 },
                     ex =>
                     {
                         var oldColor = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine(ex.ToString());
+                        Console.WriteLine(ex);
                         Console.ForegroundColor = oldColor;
                     },
-                    waringns.Add,
-                    ex =>
-                    {
-                        throw ex;
-                    },
+                    warnings.Add,
+                    ex => throw ex,
                     success.Add
                     );
 
-
-                if (waringns.Count > 0)
+                if (warnings.Count > 0)
                 {
+                    var oldColor = Console.ForegroundColor;
                     Console.ForegroundColor = ConsoleColor.Yellow;
 
-                    Console.WriteLine("{0} Warnigns occured", waringns.Count);
+                    Console.WriteLine($"{warnings.Count} Warnings occured");
 
-                    foreach (var warning in waringns)
+                    foreach (var warning in warnings)
                     {
                         Console.WriteLine(new string('-', Console.BufferWidth));
                         Console.WriteLine(warning.Item1);
@@ -63,6 +60,7 @@ namespace DXNugetPackageBuilder
 
                         Console.WriteLine(warning.Item2);
                     }
+                    Console.ForegroundColor = oldColor;
                 }
             }
 
@@ -88,13 +86,16 @@ namespace DXNugetPackageBuilder
             }
         }
 
-        private static void BuildPackages(ProgramArguments arguments, Action<string> logAction, Action<Exception> logExceptionAction, Action<Tuple<string, Exception>> logLoadAssemblyAction, Action<Exception> unexpectedExceptionAction, Action<string> successAction)
+        static void BuildPackages(ProgramArguments arguments, Action<string> logAction, Action<Exception> logExceptionAction, Action<Tuple<string, Exception>> logLoadAssemblyAction, Action<Exception> unexpectedExceptionAction, Action<string> successAction)
         {
             if (!Directory.Exists(arguments.SourceDirectory))
             {
-                logExceptionAction(new DirectoryNotFoundException($"{arguments.SourceDirectory} does not exists"));
+                logExceptionAction?.Invoke(new DirectoryNotFoundException($"{arguments.SourceDirectory} does not exists"));
                 return;
             }
+
+            // We assume that the Components\Bin has 2 subfolders : Framework for net40, Standard for netstandard20
+            var standardDirectory = Path.Combine(Directory.GetParent(arguments.SourceDirectory).FullName, "Standard");
 
             if (!Directory.Exists(arguments.OutputDirectory))
             {
@@ -106,15 +107,24 @@ namespace DXNugetPackageBuilder
                 Directory.CreateDirectory(arguments.PdbDirectory);
             }
 
-            foreach (var file in Directory.EnumerateFiles(arguments.SourceDirectory, "*.dll").Concat(Directory.EnumerateFiles(arguments.SourceDirectory, "*.exe")).Where(f => Path.GetFileNameWithoutExtension(f).StartsWith("DevExpress")))
+            // When downloading the pdbs from DevExpress, the pdb archive has a subfolder Standard that holds the netstandard20 pdbs
+            var standardPdbDirectory = Path.Combine(arguments.PdbDirectory, "Standard");
+
+            if (!Directory.Exists(standardPdbDirectory))
+            {
+                Directory.CreateDirectory(standardPdbDirectory);
+            }
+
+            foreach (var file in Directory.EnumerateFiles(arguments.SourceDirectory, "*.dll").Concat(Directory.EnumerateFiles(arguments.SourceDirectory, "*.exe")).Where(f => Path.GetFileNameWithoutExtension(f).StartsWith("DevExpress", StringComparison.Ordinal)))
             {
                 try
                 {
                     var packageName = Path.GetFileNameWithoutExtension(file);
 
-                    var package = new PackageBuilder();
-
-                    package.Description = "DevExpress " + packageName;
+                    var package = new PackageBuilder
+                    {
+                        Description = "DevExpress " + packageName
+                    };
                     package.Authors.Add("Developer Express Inc.");
                     package.IconUrl = new Uri("https://www.devexpress.com/favicon.ico?v=2");
                     package.Copyright = "2008-" + DateTime.Today.Year;
@@ -128,8 +138,8 @@ namespace DXNugetPackageBuilder
 
                     try
                     {
-
-                        var assembly = Assembly.LoadFile(file);
+                        var assembly = Assembly.LoadFile(file); // Will load from GAC if components are installed from DevExpress Installer
+                        logAction?.Invoke($"Assembly {assembly.Location} loaded !");
 
                         var pdbFile = Path.ChangeExtension(Path.GetFileName(file), "pdb");
 
@@ -166,7 +176,6 @@ namespace DXNugetPackageBuilder
                             });
                         }
 
-
                         var assemblyVersion = assembly.GetName().Version;
 
                         var dxVersion = ".v" + assemblyVersion.Major + "." + assemblyVersion.Minor;
@@ -179,50 +188,199 @@ namespace DXNugetPackageBuilder
                         }
 
                         if (packageName.Contains(dxVersion))
+                        {
                             packageName = packageName.Replace(dxVersion, string.Empty);
+                        }
 
                         var targetPackagePath = Path.Combine(arguments.OutputDirectory, packageName + "." + assemblyVersion.ToString(4) + ".nupkg");
 
                         if (File.Exists(targetPackagePath))
+                        {
                             File.Delete(targetPackagePath);
+                        }
 
                         package.Id = packageName;
                         package.Version = new SemanticVersion(assemblyVersion);
 
-                        var dependencies = new List<PackageDependency>();
-
-                        foreach (var refAssembly in assembly.GetReferencedAssemblies().Where(r => r.Name.StartsWith("DevExpress")))
+                        logAction?.Invoke("net40 dependencies:");
+                        // We only go for DevExpress dependencies - the rest should be only .NET Framework dependencies
+                        var dependencies = PullDependencies(arguments, logAction, package, assembly.GetReferencedAssemblies().Where(r => r.Name.StartsWith("DevExpress", StringComparison.Ordinal)), dxVersion);
+                        if (dependencies.Count == 0)
                         {
-                            logAction(refAssembly.Name);
+                            logAction?.Invoke($"No net40 dependencies!");
+                        }
 
-                            var refPackageId = refAssembly.Name;
+                        // We need to provide an explicit framework name, in case we have a netstandard20 version
+                        package.DependencySets.Add(new PackageDependencySet(new FrameworkName(".NETFramework, Version=4.0"), dependencies));
 
-                            if (refPackageId.Contains(dxVersion))
-                                refPackageId = refPackageId.Replace(dxVersion, string.Empty);
-
-
-                            var refAssemblyVersion = refAssembly.Version;
-
-                            var minVersion = new SemanticVersion(new Version(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build));
-                            var maxVersion = new SemanticVersion(new Version(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build + 1));
-
-                            var versionSpec = new VersionSpec { MinVersion = minVersion, MaxVersion = maxVersion, IsMinInclusive = true };
-
-                            var dependency = new PackageDependency(refPackageId, versionSpec);
-
-                            if (!arguments.Strict)
+                        // netstandard20 part - skipped if not standard folder is found next to the framework folder.
+                        // Only checks if we have a file of the same name in the standard folder, it does not create pure standard20 packages.
+                        if (Directory.Exists(standardDirectory))
+                        {
+                            var standardFile = Path.Combine(standardDirectory, Path.GetFileName(file));
+                            if (File.Exists(standardFile))
                             {
-                                var skippedDependencies = new Dictionary<string, string[]>();
+                                package.Files.Add(new PhysicalPackageFile
+                                {
+                                    SourcePath = standardFile,
+                                    TargetPath = "lib/netstandard20/" + Path.GetFileName(standardFile),
+                                });
 
-                                skippedDependencies["DevExpress.Persistent.Base"] = new[]
+                                // PDB Files retains the name, only the folder is different
+                                var standardPdbFile = Path.Combine(standardPdbDirectory, pdbFile);
+
+                                if (File.Exists(standardPdbFile))
+                                {
+                                    package.Files.Add(new PhysicalPackageFile
+                                    {
+                                        SourcePath = standardPdbFile,
+                                        TargetPath = "lib/netstandard20/" + Path.GetFileName(standardPdbFile),
+                                    });
+                                }
+
+                                // XML Files are identical for both targets
+                                if (File.Exists(xmlFile))
+                                {
+                                    package.Files.Add(new PhysicalPackageFile
+                                    {
+                                        SourcePath = xmlFile,
+                                        TargetPath = "lib/netstandard20/" + Path.GetFileName(xmlFile),
+                                    });
+                                }
+
+                                var standardAssembly = Assembly.LoadFile(standardFile);
+                                logAction?.Invoke($"Assembly {standardAssembly.Location} loaded !");
+                                // .Net Standard version of Assembly.LoadFrom would work, by not accessing the GAC
+                                if(standardAssembly.Location.Contains("GAC_MSIL"))
+                                {
+                                    logExceptionAction?.Invoke(new FileLoadException("Trying to load a standard dll from the GAC. It won't work, the script shouldn't be run on computer where DevExpress Installer has been run! Copy the necessary components on a computer without DevExpress installed."));
+                                }
+
+                                logAction?.Invoke("netstandard20 dependencies:");
+                                // We go for all dependencies, as all of them should be pull from NuGet packages
+                                var standardDependencies = PullDependencies(arguments, logAction, package, standardAssembly.GetReferencedAssemblies(), dxVersion);
+                                if (dependencies.Count == 0)
+                                {
+                                    logAction?.Invoke($"No netstandard dependencies!");
+                                }
+                                package.DependencySets.Add(new PackageDependencySet(new FrameworkName(".NETStandard, Version=2.0"), standardDependencies));
+                            }
+                        }
+
+                        CreateLocalization(file, package, arguments);
+
+                        using (var fs = new FileStream(targetPackagePath, FileMode.CreateNew, FileAccess.ReadWrite))
+                        {
+                            package.Save(fs);
+
+                            successAction?.Invoke(package.Id);
+                        }
+
+                        Console.WriteLine(packageName);
+                    }
+                    catch (Exception ex)
+                    {
+                        logExceptionAction?.Invoke(ex);
+                        logLoadAssemblyAction?.Invoke(Tuple.Create(package.Id, ex));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logExceptionAction?.Invoke(ex);
+                    unexpectedExceptionAction?.Invoke(ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Pulls the dependencies from an assembly - works for both net40 and netstandard20
+        /// </summary>
+        /// <param name="arguments">The arguments provided to the command line.</param>
+        /// <param name="logAction">The log action.</param>
+        /// <param name="package">The package builder.</param>
+        /// <param name="referencedAssemblies">The referenced assemblies from which we'll deduce the dependencies.</param>
+        /// <param name="dxVersion">The devExpress version currently built.</param>
+        /// <returns></returns>
+        static List<PackageDependency> PullDependencies(ProgramArguments arguments, Action<string> logAction, PackageBuilder package, IEnumerable<AssemblyName> referencedAssemblies, string dxVersion)
+        {
+            var dependencies = new List<PackageDependency>();
+
+            foreach (var refAssembly in referencedAssemblies)
+            {
+                logAction?.Invoke(refAssembly.Name + ": " + refAssembly.Version);
+
+                var refPackageId = refAssembly.Name;
+
+                if (refPackageId.StartsWith("DevExpress", StringComparison.Ordinal) && refPackageId.Contains(dxVersion))
+                {
+                    refPackageId = refPackageId.Replace(dxVersion, string.Empty);
+                }
+
+                var refAssemblyVersion = refAssembly.Version;
+
+                VersionSpec versionSpec;
+
+                if (refPackageId == "netstandard")
+                {
+                    // .NET Standard ugly part - The dll versions are not matching the packages
+                    // An alternative, would be to extract the versions from the csproj in the pdbs
+                    refPackageId = "NETStandard.Library";
+                    if (refAssemblyVersion.Major == 2 && refAssemblyVersion.Minor == 0 && refAssemblyVersion.Build <= 3)
+                    {
+                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion("2.0.3"), IsMinInclusive = true };
+                        logAction?.Invoke("     Forced Version:" + versionSpec);
+                    }
+                }
+
+                if (refPackageId.StartsWith("DevExpress", StringComparison.Ordinal))
+                {
+                    var minVersion = new SemanticVersion(new Version(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build));
+                    var maxVersion = new SemanticVersion(new Version(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build + 1));
+                    versionSpec = new VersionSpec { MinVersion = minVersion, MaxVersion = maxVersion, IsMinInclusive = true };
+                }
+                else
+                {
+                    // .NET Standard ugly part - The dll versions are not matching the packages
+                    // An alternative, would be to extract the versions from the csproj in the pdbs
+                    if ((refPackageId == "System.Drawing.Common" || refPackageId == "System.CodeDom" || refPackageId == "System.Data.SqlClient" || refPackageId == "System.Configuration.ConfigurationManager")
+                        && refAssemblyVersion.Major == 4 && refAssemblyVersion.Minor <= 5)
+                    {
+                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion("4.5.0"), IsMinInclusive = true };
+                        logAction?.Invoke("     Forced Version:" + versionSpec);
+                    }
+                    else if ((refPackageId == "System.ComponentModel.Annotations" || refPackageId == "System.ServiceModel.Primitives" || refPackageId == "System.ServiceModel.Http" || refPackageId == "System.Text.Encoding.CodePages")
+                        && refAssemblyVersion.Major == 4 && refAssemblyVersion.Minor <= 4)
+                    {
+                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion("4.4.0"), IsMinInclusive = true };
+                        logAction?.Invoke("     Forced Version:" + versionSpec);
+                    }
+                    else if ((refPackageId == "System.Reflection.Emit" || refPackageId == "System.Reflection.Emit.Lightweight" || refPackageId == "System.Reflection.Emit.ILGeneration")
+                        && refAssemblyVersion.Major == 4 && refAssemblyVersion.Minor <= 3)
+                    {
+                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion("4.3.0"), IsMinInclusive = true };
+                        logAction?.Invoke("     Forced Version:" + versionSpec);
+                    }
+                    else
+                    {
+                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion(refAssemblyVersion), IsMinInclusive = true };
+                    }
+                }
+
+                var dependency = new PackageDependency(refPackageId, versionSpec);
+
+                if (!arguments.Strict)
+                {
+                    var skippedDependencies = new Dictionary<string, string[]>
+                    {
+                        ["DevExpress.Persistent.Base"] = new[]
                                 {
                                     "DevExpress.Utils",
                                     "DevExpress.XtraReports",
                                     "DevExpress.XtraReports.Extensions",
                                     "DevExpress.Printing.Core",
-                                };
+                                },
 
-                                skippedDependencies["DevExpress.Persistent.BaseImpl"] = new[]
+                        ["DevExpress.Persistent.BaseImpl"] = new[]
                                 {
                                     "DevExpress.Utils",
                                     "DevExpress.ExpressApp.ReportsV2",
@@ -230,9 +388,9 @@ namespace DXNugetPackageBuilder
                                     "DevExpress.XtraReports",
                                     "DevExpress.ExpressApp.ConditionalAppearance",
                                     "DevExpress.XtraScheduler.Core",
-                                };
+                                },
 
-                                skippedDependencies["DevExpress.Persistent.BaseImpl.EF"] = new[]
+                        ["DevExpress.Persistent.BaseImpl.EF"] = new[]
                                 {
                                     "DevExpress.Utils",
                                     "DevExpress.ExpressApp.Kpi",
@@ -244,60 +402,31 @@ namespace DXNugetPackageBuilder
                                     "DevExpress.XtraReports",
                                     "DevExpress.XtraScheduler.Core",
                                     "DevExpress.ExpressApp.Reports"
-                                };
-
-                                if (skippedDependencies.Keys.Any(id => package.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase)))
-                                {
-                                    var skippedDependency = skippedDependencies[package.Id];
-
-                                    if (skippedDependency.Any(id => dependency.Id.Equals(id)))
-                                    {
-                                        logAction($"Skipping Dependency: {dependency.Id} for Package {package.Id} to avoid UI in Persistence");
-                                        continue;
-                                    }
                                 }
-                            }
+                    };
 
-                            dependencies.Add(dependency);
-
-                        }
-
-                        package.DependencySets.Add(new PackageDependencySet(null, dependencies));
-
-
-                        CreateLocalization(file, package, arguments);
-
-
-                        using (var fs = new FileStream(targetPackagePath, FileMode.CreateNew, FileAccess.ReadWrite))
-                        {
-                            package.Save(fs);
-
-                            successAction(package.Id);
-                        }
-
-                        Console.WriteLine(packageName);
-                    }
-                    catch (Exception ex)
+                    if (skippedDependencies.Keys.Any(id => package.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase)))
                     {
-                        logExceptionAction(ex);
-                        logLoadAssemblyAction(Tuple.Create(package.Id, ex));
+                        var skippedDependency = skippedDependencies[package.Id];
+
+                        if (skippedDependency.Any(dependency.Id.Equals))
+                        {
+                            logAction?.Invoke($"Skipping Dependency: {dependency.Id} for Package {package.Id} to avoid UI in Persistence");
+                            continue;
+                        }
                     }
                 }
-                catch (Exception ex)
-                {
-                    logExceptionAction(ex);
-                    unexpectedExceptionAction(ex);
-                }
+
+                dependencies.Add(dependency);
             }
+            return dependencies;
         }
 
-
-        private static void CreateLocalization(string file, PackageBuilder resourcePackage, ProgramArguments arguments)
+        static void CreateLocalization(string file, PackageBuilder resourcePackage, ProgramArguments arguments)
         {
-            var assemblyFileName = Path.GetFileName(file);
             var resourceFileName = Path.GetFileName(Path.ChangeExtension(file, "resources.dll"));
 
-            foreach (var lang in arguments.LanguagesAsArray)
+            foreach (var lang in arguments.LanguagesEnumerable)
             {
                 var localizedAssemblyPath = Path.Combine(arguments.SourceDirectory, lang, resourceFileName);
                 if (File.Exists(localizedAssemblyPath))
@@ -322,11 +451,11 @@ namespace DXNugetPackageBuilder
             }
         }
 
-        private static void PushPackages(ProgramArguments arguments)
+        static void PushPackages(ProgramArguments arguments)
         {
             var packages = Directory.GetFiles(arguments.OutputDirectory, "*.nupkg").ToList();
 
-            Console.WriteLine("Pushing {0} packages to " + arguments.NugetSource, packages.Count());
+            Console.WriteLine("Pushing {0} packages to " + arguments.NugetSource, packages.Count);
 
             foreach (var package in packages)
             {
@@ -336,12 +465,14 @@ namespace DXNugetPackageBuilder
 
                     using (var process = new Process())
                     {
-                        process.StartInfo = new ProcessStartInfo("nuget.exe", string.Format("push {0} -Source {1} -ApiKey {2}", packageName, arguments.NugetSource, arguments.NugetApiKey));
-                        process.StartInfo.CreateNoWindow = true;
-                        process.StartInfo.ErrorDialog = false;
-                        process.StartInfo.RedirectStandardError = true;
-                        process.StartInfo.RedirectStandardOutput = true;
-                        process.StartInfo.UseShellExecute = false;
+                        process.StartInfo = new ProcessStartInfo("nuget.exe", $"push {packageName} -Source {arguments.NugetSource} -ApiKey {arguments.NugetApiKey}")
+                        {
+                            CreateNoWindow = true,
+                            ErrorDialog = false,
+                            RedirectStandardError = true,
+                            RedirectStandardOutput = true,
+                            UseShellExecute = false
+                        };
 
                         process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
                         process.ErrorDataReceived += (sender, args) => Console.WriteLine(args.Data);
@@ -360,7 +491,6 @@ namespace DXNugetPackageBuilder
                     Console.WriteLine(ex);
                     Console.ReadKey();
                 }
-
             }
         }
     }
