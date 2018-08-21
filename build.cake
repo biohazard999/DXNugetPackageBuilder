@@ -1,55 +1,35 @@
-var target = Argument("target", "Default");
+var target = string.IsNullOrEmpty(Argument("target", "Default")) ? "Default" : Argument("target", "Default");
 
-Task("Paket-Bootstrapper")
-	.Does(() =>
-{
-	StartProcess(".paket/paket.bootstrapper.exe", new ProcessSettings{
-      WorkingDirectory = ".",
-      Arguments = ""
-   });   	
-});
-
-Task("Paket-Restore")
-	.IsDependentOn("Paket-Bootstrapper")
-	.Does(() =>
-{
-	StartProcess(".paket/paket.exe", new ProcessSettings{
-      WorkingDirectory = ".",
-      Arguments = "restore"
-   });   	
-});
-
-Task("Paket-Install")
-	.IsDependentOn("Paket-Bootstrapper")
-	.Does(() =>
-{
-	StartProcess(".paket/paket.exe", new ProcessSettings{
-      WorkingDirectory = ".",
-      Arguments = "install"
-   });   	
-});
-
+var sln = "./DXNugetPackageBuilder.sln";
 
 Task("Clean")
 	.Does(() =>
 {
-	CleanDirectories("./src/**/bin/debug");
+	DeleteDirectories(GetDirectories("./src/**/obj"), new DeleteDirectorySettings 
+	{
+		Recursive = true
+	});
+	DeleteDirectories(GetDirectories("./src/**/bin"), new DeleteDirectorySettings 
+	{
+		Recursive = true
+	});
 });
 
 Task("Copy-NuGet")
 	.Does(() => 
 {
+	CreateDirectory("./src/DXNugetPackageBuilder/bin/Debug/");
 	CopyFileToDirectory("./tools/nuget.exe", "./src/DXNugetPackageBuilder/bin/Debug/");
 });
 
+Task("Restore")
+	.Does(() => NuGetRestore(sln));
+
 Task("Build")
 	.IsDependentOn("Clean")
-	.IsDependentOn("Paket-Restore")
+	.IsDependentOn("Restore")
 	.IsDependentOn("Copy-NuGet")
-	.Does(() =>
-{
-	DotNetBuild("./DXNugetPackageBuilder.sln");
-});
+	.Does(() => DotNetBuild(sln));
 
 
 Task("Default")

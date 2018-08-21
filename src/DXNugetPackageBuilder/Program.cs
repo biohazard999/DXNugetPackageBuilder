@@ -50,7 +50,7 @@ namespace DXNugetPackageBuilder
                     var oldColor = Console.ForegroundColor;
                     Console.ForegroundColor = ConsoleColor.Yellow;
 
-                    Console.WriteLine($"{warnings.Count} Warnings occured");
+                    Console.WriteLine($"{warnings.Count} Warnings occurred");
 
                     foreach (var warning in warnings)
                     {
