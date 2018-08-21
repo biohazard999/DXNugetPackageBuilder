@@ -1,15 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{FB6FBAB8-0989-4680-8558-B141D9FA3D1A}"
-	ProjectSection(SolutionItems) = preProject
-		.paket\paket.bootstrapper.exe = .paket\paket.bootstrapper.exe
-		paket.dependencies = paket.dependencies
-		paket.lock = paket.lock
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".cake", ".cake", "{D30743B4-1DBC-4049-814A-4597546D7DF6}"
 	ProjectSection(SolutionItems) = preProject
 		build.cake = build.cake
@@ -25,7 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".git", ".git", "{8D8D9A31-3
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A1CCACDA-7EEF-410F-AAC5-C42189BAD40E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXNugetPackageBuilder", "src\DXNugetPackageBuilder\DXNugetPackageBuilder.csproj", "{5B7C83A1-179C-4805-9727-69E6C7024EF0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DXNugetPackageBuilder", "src\DXNugetPackageBuilder\DXNugetPackageBuilder.csproj", "{5B7C83A1-179C-4805-9727-69E6C7024EF0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".proj", ".proj", "{A02A4759-44C3-4E41-B794-EAD39F14A0DD}"
 	ProjectSection(SolutionItems) = preProject
@@ -56,5 +49,8 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5B7C83A1-179C-4805-9727-69E6C7024EF0} = {A1CCACDA-7EEF-410F-AAC5-C42189BAD40E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6D3B94D7-622F-410D-83B7-7BAC4E0A20D0}
 	EndGlobalSection
 EndGlobal

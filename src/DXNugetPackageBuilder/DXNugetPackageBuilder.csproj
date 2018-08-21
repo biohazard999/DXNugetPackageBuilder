@@ -11,16 +11,9 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-  </PropertyGroup> 
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Ookii.CommandLine">
-      <HintPath>..\..\packages\Ookii.CommandLine\lib\Ookii.CommandLine.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="paket.references" />
-  </ItemGroup>
+    <PackageReference Include="NuGet.Core" Version="2.14.0" />
+    <PackageReference Include="Ookii.CommandLine" Version="2.2.0" />
+  </ItemGroup> 
 </Project>
