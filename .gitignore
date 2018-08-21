@@ -3,10 +3,8 @@
 
 ## Tools & Build Section
 
-.paket/paket.exe
-.paket/Paket.Restore.targets
-paket-files/paket.restore.cached
-tools/
+tools/*
+!tools/packages.config
 
 # User-specific files
 *.suo
