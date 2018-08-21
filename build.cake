@@ -18,8 +18,8 @@ Task("Clean")
 Task("Copy-NuGet")
 	.Does(() => 
 {
-	CreateDirectory("./src/DXNugetPackageBuilder/bin/Debug/");
-	CopyFileToDirectory("./tools/nuget.exe", "./src/DXNugetPackageBuilder/bin/Debug/");
+	CreateDirectory("./src/DXNugetPackageBuilder/bin/Debug/net45");
+	CopyFileToDirectory("./tools/nuget.exe", "./src/DXNugetPackageBuilder/bin/Debug/net45");
 });
 
 Task("Restore")
