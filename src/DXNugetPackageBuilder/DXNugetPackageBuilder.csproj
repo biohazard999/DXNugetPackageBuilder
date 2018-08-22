@@ -1,19 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
-    <Platforms>AnyCPU;x86</Platforms>
     <OutputType>Exe</OutputType>
-    <AssemblyTitle>DXNugetPackageBuilder</AssemblyTitle>
-    <Company></Company>
-    <Product>DXNugetPackageBuilder</Product>
-    <Description></Description>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <StartupObject>DXNugetPackageBuilder.Program</StartupObject>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Copyright>Copyright © Manuel Grundner 2014</Copyright>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Authors>Manuel Grundner</Authors>
+    <Company>Manuel Grundner</Company>
   </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="NuGet.Core" Version="2.14.0" />
-    <PackageReference Include="Ookii.CommandLine" Version="2.2.0" />
-  </ItemGroup> 
+    <PackageReference Include="NuGet.Packaging" Version="4.8.0" />
+    <PackageReference Include="Ookii.CommandLine" Version="3.0.0" />
+  </ItemGroup>
+
 </Project>

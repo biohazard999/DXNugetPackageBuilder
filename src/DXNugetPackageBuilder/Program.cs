@@ -5,7 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-using NuGet;
+using NuGet.Frameworks;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 
 namespace DXNugetPackageBuilder
 {
@@ -200,7 +203,7 @@ namespace DXNugetPackageBuilder
                         }
 
                         package.Id = packageName;
-                        package.Version = new SemanticVersion(assemblyVersion);
+                        package.Version = new NuGetVersion(assemblyVersion.Major, assemblyVersion.Minor, assemblyVersion.Build);
 
                         logAction?.Invoke("net40 dependencies:");
                         // We only go for DevExpress dependencies - the rest should be only .NET Framework dependencies
@@ -211,7 +214,7 @@ namespace DXNugetPackageBuilder
                         }
 
                         // We need to provide an explicit framework name, in case we have a netstandard20 version
-                        package.DependencySets.Add(new PackageDependencySet(new FrameworkName(".NETFramework, Version=4.0"), dependencies));
+                        package.DependencyGroups.Add(new PackageDependencyGroup(new NuGetFramework(".NETFramework, Version=4.0", new Version(4,0)), dependencies));
 
                         // netstandard20 part - skipped if not standard folder is found next to the framework folder.
                         // Only checks if we have a file of the same name in the standard folder, it does not create pure standard20 packages.
@@ -263,7 +266,7 @@ namespace DXNugetPackageBuilder
                                 {
                                     logAction?.Invoke($"No netstandard dependencies!");
                                 }
-                                package.DependencySets.Add(new PackageDependencySet(new FrameworkName(".NETStandard, Version=2.0"), standardDependencies));
+                                package.DependencyGroups.Add(new PackageDependencyGroup(new NuGetFramework(".NETStandard, Version=2.0", new Version(2,0)), standardDependencies));
                             }
                         }
 
@@ -318,7 +321,7 @@ namespace DXNugetPackageBuilder
 
                 var refAssemblyVersion = refAssembly.Version;
 
-                VersionSpec versionSpec;
+                VersionRange versionRange;
 
                 if (refPackageId == "netstandard")
                 {
@@ -327,16 +330,16 @@ namespace DXNugetPackageBuilder
                     refPackageId = "NETStandard.Library";
                     if (refAssemblyVersion.Major == 2 && refAssemblyVersion.Minor == 0 && refAssemblyVersion.Build <= 3)
                     {
-                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion("2.0.3"), IsMinInclusive = true };
-                        logAction?.Invoke("     Forced Version:" + versionSpec);
+                        versionRange = new VersionRange(new NuGetVersion(2,0,3));
+                        logAction?.Invoke("     Forced Version:" + versionRange);
                     }
                 }
 
                 if (refPackageId.StartsWith("DevExpress", StringComparison.Ordinal))
                 {
-                    var minVersion = new SemanticVersion(new Version(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build));
-                    var maxVersion = new SemanticVersion(new Version(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build + 1));
-                    versionSpec = new VersionSpec { MinVersion = minVersion, MaxVersion = maxVersion, IsMinInclusive = true };
+                    var minVersion = new NuGetVersion(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build);
+                    var maxVersion = new NuGetVersion(refAssemblyVersion.Major, refAssemblyVersion.Minor, refAssemblyVersion.Build + 1);
+                    versionRange = new VersionRange(minVersion, true, maxVersion);
                 }
                 else
                 {
@@ -345,28 +348,28 @@ namespace DXNugetPackageBuilder
                     if ((refPackageId == "System.Drawing.Common" || refPackageId == "System.CodeDom" || refPackageId == "System.Data.SqlClient" || refPackageId == "System.Configuration.ConfigurationManager")
                         && refAssemblyVersion.Major == 4 && refAssemblyVersion.Minor <= 5)
                     {
-                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion("4.5.0"), IsMinInclusive = true };
-                        logAction?.Invoke("     Forced Version:" + versionSpec);
+                        versionRange = new VersionRange(new NuGetVersion(4,5,0));
+                        logAction?.Invoke("     Forced Version:" + versionRange);
                     }
                     else if ((refPackageId == "System.ComponentModel.Annotations" || refPackageId == "System.ServiceModel.Primitives" || refPackageId == "System.ServiceModel.Http" || refPackageId == "System.Text.Encoding.CodePages")
                         && refAssemblyVersion.Major == 4 && refAssemblyVersion.Minor <= 4)
                     {
-                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion("4.4.0"), IsMinInclusive = true };
-                        logAction?.Invoke("     Forced Version:" + versionSpec);
+                        versionRange = new VersionRange(new NuGetVersion(4,4,0));
+                        logAction?.Invoke("     Forced Version:" + versionRange);
                     }
                     else if ((refPackageId == "System.Reflection.Emit" || refPackageId == "System.Reflection.Emit.Lightweight" || refPackageId == "System.Reflection.Emit.ILGeneration")
                         && refAssemblyVersion.Major == 4 && refAssemblyVersion.Minor <= 3)
                     {
-                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion("4.3.0"), IsMinInclusive = true };
-                        logAction?.Invoke("     Forced Version:" + versionSpec);
+                        versionRange = new VersionRange(new NuGetVersion(4,3,0));
+                        logAction?.Invoke("     Forced Version:" + versionRange);
                     }
                     else
                     {
-                        versionSpec = new VersionSpec { MinVersion = new SemanticVersion(refAssemblyVersion), IsMinInclusive = true };
+                        versionRange = new VersionRange(new NuGetVersion(refAssemblyVersion));
                     }
                 }
 
-                var dependency = new PackageDependency(refPackageId, versionSpec);
+                var dependency = new PackageDependency(refPackageId, versionRange);
 
                 if (!arguments.Strict)
                 {

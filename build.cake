@@ -5,18 +5,18 @@ var sln = "./DXNugetPackageBuilder.sln";
 Task("Clean")
 	.Does(() =>
 {
-	DeleteDirectories(GetDirectories("./src/**/obj"), new DeleteDirectorySettings 
+	DeleteDirectories(GetDirectories("./src/**/obj"), new DeleteDirectorySettings
 	{
 		Recursive = true
 	});
-	DeleteDirectories(GetDirectories("./src/**/bin"), new DeleteDirectorySettings 
+	DeleteDirectories(GetDirectories("./src/**/bin"), new DeleteDirectorySettings
 	{
 		Recursive = true
 	});
 });
 
 Task("Copy-NuGet")
-	.Does(() => 
+	.Does(() =>
 {
 	CreateDirectory("./src/DXNugetPackageBuilder/bin/Debug/net45");
 	CopyFileToDirectory("./tools/nuget.exe", "./src/DXNugetPackageBuilder/bin/Debug/net45");
@@ -29,7 +29,7 @@ Task("Build")
 	.IsDependentOn("Clean")
 	.IsDependentOn("Restore")
 	.IsDependentOn("Copy-NuGet")
-	.Does(() => DotNetBuild(sln));
+	.Does(() => MSBuild(sln));
 
 
 Task("Default")
