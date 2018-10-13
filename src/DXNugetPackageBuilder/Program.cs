@@ -1,14 +1,14 @@
-﻿using System;
+﻿using CommandLine;
+using NuGet.Frameworks;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Versioning;
-using NuGet.Frameworks;
-using NuGet.Packaging;
-using NuGet.Packaging.Core;
-using NuGet.Versioning;
 
 namespace DXNugetPackageBuilder
 {
@@ -16,77 +16,75 @@ namespace DXNugetPackageBuilder
     {
         static void Main(string[] args)
         {
-            var arguments = ProgramArguments.Create(args);
-
-            if (arguments == null)
-            {
-                Console.ReadLine();
-                return;
-            }
-
-            var warnings = new List<Tuple<string, Exception>>();
-            var success = new List<string>();
-
-            if (!arguments.NugetPushOnly)
-            {
-                BuildPackages(arguments, dependency =>
+            Parser.Default.ParseArguments<ProgramArguments>(args)
+                .WithNotParsed(errs =>
                 {
-                    if (arguments.Verbose)
-                    {
-                        Console.WriteLine("\t" + dependency);
-                    }
-                },
-                    ex =>
-                    {
-                        var oldColor = Console.ForegroundColor;
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine(ex);
-                        Console.ForegroundColor = oldColor;
-                    },
-                    warnings.Add,
-                    ex => throw ex,
-                    success.Add
-                    );
-
-                if (warnings.Count > 0)
-                {
-                    var oldColor = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-
-                    Console.WriteLine($"{warnings.Count} Warnings occurred");
-
-                    foreach (var warning in warnings)
-                    {
-                        Console.WriteLine(new string('-', Console.BufferWidth));
-                        Console.WriteLine(warning.Item1);
-                        Console.WriteLine(new string('-', Console.BufferWidth));
-
-                        Console.WriteLine(warning.Item2);
-                    }
-                    Console.ForegroundColor = oldColor;
-                }
-            }
-
-            if (arguments.NugetPush)
-            {
-                Console.WriteLine("Created all packages.");
-
-                if (string.IsNullOrEmpty(arguments.NugetSource))
-                {
-                    Console.WriteLine("NugetSource is empty, cannot push packages");
-                    Console.WriteLine("Please press enter to exit");
                     Console.ReadLine();
-                }
-                else
+                })
+                .WithParsed((arguments) =>
                 {
-                    PushPackages(arguments);
-                }
-            }
-            else
-            {
-                Console.WriteLine("Created all packages, please press enter to exit");
-                Console.ReadLine();
-            }
+                    var warnings = new List<Tuple<string, Exception>>();
+                    var success = new List<string>();
+
+                    if (!arguments.NugetPushOnly)
+                    {
+                        BuildPackages(arguments, dependency =>
+                        {
+                            if (arguments.Verbose)
+                            {
+                                Console.WriteLine("\t" + dependency);
+                            }
+                        },
+                            ex =>
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine(ex);
+                                Console.ResetColor();
+                            },
+                            warnings.Add,
+                            ex => throw ex,
+                            success.Add
+                            );
+
+                        if (warnings.Count > 0)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+
+                            Console.WriteLine($"{warnings.Count} Warnings occurred");
+
+                            foreach (var warning in warnings)
+                            {
+                                Console.WriteLine(new string('-', Console.BufferWidth));
+                                Console.WriteLine(warning.Item1);
+                                Console.WriteLine(new string('-', Console.BufferWidth));
+
+                                Console.WriteLine(warning.Item2);
+                            }
+                            Console.ResetColor();
+                        }
+                    }
+
+                    if (arguments.NugetPush)
+                    {
+                        Console.WriteLine("Created all packages.");
+
+                        if (string.IsNullOrEmpty(arguments.NugetSource))
+                        {
+                            Console.WriteLine("NugetSource is empty, cannot push packages");
+                            Console.WriteLine("Please press enter to exit");
+                            Console.ReadLine();
+                        }
+                        else
+                        {
+                            PushPackages(arguments);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Created all packages, please press enter to exit");
+                        Console.ReadLine();
+                    }
+                });
         }
 
         static void BuildPackages(ProgramArguments arguments, Action<string> logAction, Action<Exception> logExceptionAction, Action<Tuple<string, Exception>> logLoadAssemblyAction, Action<Exception> unexpectedExceptionAction, Action<string> successAction)
@@ -214,7 +212,7 @@ namespace DXNugetPackageBuilder
                         }
 
                         // We need to provide an explicit framework name, in case we have a netstandard20 version
-                        package.DependencyGroups.Add(new PackageDependencyGroup(new NuGetFramework(".NETFramework, Version=4.0", new Version(4,0)), dependencies));
+                        package.DependencyGroups.Add(new PackageDependencyGroup(new NuGetFramework(".NETFramework, Version=4.0", new Version(4, 0)), dependencies));
 
                         // netstandard20 part - skipped if not standard folder is found next to the framework folder.
                         // Only checks if we have a file of the same name in the standard folder, it does not create pure standard20 packages.
@@ -254,7 +252,7 @@ namespace DXNugetPackageBuilder
                                 var standardAssembly = Assembly.LoadFile(standardFile);
                                 logAction?.Invoke($"Assembly {standardAssembly.Location} loaded !");
                                 // .Net Standard version of Assembly.LoadFrom would work, by not accessing the GAC
-                                if(standardAssembly.Location.Contains("GAC_MSIL"))
+                                if (standardAssembly.Location.Contains("GAC_MSIL"))
                                 {
                                     logExceptionAction?.Invoke(new FileLoadException("Trying to load a standard dll from the GAC. It won't work, the script shouldn't be run on computer where DevExpress Installer has been run! Copy the necessary components on a computer without DevExpress installed."));
                                 }
@@ -266,7 +264,7 @@ namespace DXNugetPackageBuilder
                                 {
                                     logAction?.Invoke($"No netstandard dependencies!");
                                 }
-                                package.DependencyGroups.Add(new PackageDependencyGroup(new NuGetFramework(".NETStandard, Version=2.0", new Version(2,0)), standardDependencies));
+                                package.DependencyGroups.Add(new PackageDependencyGroup(new NuGetFramework(".NETStandard, Version=2.0", new Version(2, 0)), standardDependencies));
                             }
                         }
 
@@ -330,7 +328,7 @@ namespace DXNugetPackageBuilder
                     refPackageId = "NETStandard.Library";
                     if (refAssemblyVersion.Major == 2 && refAssemblyVersion.Minor == 0 && refAssemblyVersion.Build <= 3)
                     {
-                        versionRange = new VersionRange(new NuGetVersion(2,0,3));
+                        versionRange = new VersionRange(new NuGetVersion(2, 0, 3));
                         logAction?.Invoke("     Forced Version:" + versionRange);
                     }
                 }
@@ -348,19 +346,19 @@ namespace DXNugetPackageBuilder
                     if ((refPackageId == "System.Drawing.Common" || refPackageId == "System.CodeDom" || refPackageId == "System.Data.SqlClient" || refPackageId == "System.Configuration.ConfigurationManager")
                         && refAssemblyVersion.Major == 4 && refAssemblyVersion.Minor <= 5)
                     {
-                        versionRange = new VersionRange(new NuGetVersion(4,5,0));
+                        versionRange = new VersionRange(new NuGetVersion(4, 5, 0));
                         logAction?.Invoke("     Forced Version:" + versionRange);
                     }
                     else if ((refPackageId == "System.ComponentModel.Annotations" || refPackageId == "System.ServiceModel.Primitives" || refPackageId == "System.ServiceModel.Http" || refPackageId == "System.Text.Encoding.CodePages")
                         && refAssemblyVersion.Major == 4 && refAssemblyVersion.Minor <= 4)
                     {
-                        versionRange = new VersionRange(new NuGetVersion(4,4,0));
+                        versionRange = new VersionRange(new NuGetVersion(4, 4, 0));
                         logAction?.Invoke("     Forced Version:" + versionRange);
                     }
                     else if ((refPackageId == "System.Reflection.Emit" || refPackageId == "System.Reflection.Emit.Lightweight" || refPackageId == "System.Reflection.Emit.ILGeneration")
                         && refAssemblyVersion.Major == 4 && refAssemblyVersion.Minor <= 3)
                     {
-                        versionRange = new VersionRange(new NuGetVersion(4,3,0));
+                        versionRange = new VersionRange(new NuGetVersion(4, 3, 0));
                         logAction?.Invoke("     Forced Version:" + versionRange);
                     }
                     else

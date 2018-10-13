@@ -14,10 +14,13 @@ Powershell.exe -executionpolicy remotesigned -File build.ps1
 
 set Builder=src\DXNugetPackageBuilder\bin\Debug\netcoreapp2.1\win-x64\DXNugetPackageBuilder.exe
 
-%Builder% "C:\Program Files (x86)\DevExpress %DXVersion%\DevExpressCodedUIExtensions\Tools" %SymbolsFolder% %TargetNugetFolder% %Localization% %NugetServer% %NugetApiKey% %NugetPush%
+%Builder% --src="C:\Program Files (x86)\DevExpress %DXVersion%\DevExpressCodedUIExtensions\Tools" --pdb="%SymbolsFolder%" -o "%TargetNugetFolder%" --lang=%Localization%
+REM --nugetsource=%NugetServer% --nugetapikey=%NugetApiKey% --nugetpush=%NugetPush%
 
-%Builder% "C:\Program Files (x86)\DevExpress %DXVersion%\Components\Tools\eXpressAppFramework\Model Editor" %SymbolsFolder% %TargetNugetFolder% %Localization% %NugetServer% %NugetApiKey% %NugetPush%
+%Builder% --src="C:\Program Files (x86)\DevExpress %DXVersion%\Components\Tools\eXpressAppFramework\Model Editor" --pdb="%SymbolsFolder%" -o "%TargetNugetFolder%" --lang=%Localization%
+REM --nugetsource=%NugetServer% --nugetapikey=%NugetApiKey% --nugetpush=%NugetPush%
 
 REM Add "-Verbose" for verbosity
-%Builder% "C:\Program Files (x86)\DevExpress %DXVersion%\Components\Bin\Framework" %SymbolsFolder% %TargetNugetFolder% %Localization% %NugetServer% %NugetApiKey% %NugetPush%
+%Builder% --src="C:\Program Files (x86)\DevExpress %DXVersion%\Components\Bin\Framework" --pdb="%SymbolsFolder%" -o "%TargetNugetFolder%" --lang=%Localization%
+REM --nugetsource=%NugetServer% --nugetapikey=%NugetApiKey% --nugetpush=%NugetPush%
 
