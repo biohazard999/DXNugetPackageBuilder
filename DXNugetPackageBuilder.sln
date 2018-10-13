@@ -27,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".proj", ".proj", "{A02A4759
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXNugetPackageBuilder", "src\DXNugetPackageBuilder\DXNugetPackageBuilder.csproj", "{6D71707B-957E-4580-82D7-5FA28DD63BB1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXNugetPackageBuilder.Tests", "src\DXNugetPackageBuilder.Tests\DXNugetPackageBuilder.Tests.csproj", "{17F42A6E-F4AF-4B15-898C-6886B1DDEF60}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,12 +39,17 @@ Global
 		{6D71707B-957E-4580-82D7-5FA28DD63BB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D71707B-957E-4580-82D7-5FA28DD63BB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D71707B-957E-4580-82D7-5FA28DD63BB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17F42A6E-F4AF-4B15-898C-6886B1DDEF60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17F42A6E-F4AF-4B15-898C-6886B1DDEF60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17F42A6E-F4AF-4B15-898C-6886B1DDEF60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17F42A6E-F4AF-4B15-898C-6886B1DDEF60}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6D71707B-957E-4580-82D7-5FA28DD63BB1} = {A1CCACDA-7EEF-410F-AAC5-C42189BAD40E}
+		{17F42A6E-F4AF-4B15-898C-6886B1DDEF60} = {A1CCACDA-7EEF-410F-AAC5-C42189BAD40E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D3B94D7-622F-410D-83B7-7BAC4E0A20D0}
